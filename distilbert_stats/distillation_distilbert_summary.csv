@@ -1,0 +1,2 @@
+Model,Parameters,Compression Ratio,Best Val Accuracy (%),Test Accuracy (%),Test Loss
+distilbert,"66,955,010",5.31x,90.72,91.19,0.3696

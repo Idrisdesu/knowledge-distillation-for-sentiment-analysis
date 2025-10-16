@@ -1,0 +1,2 @@
+Model,Parameters,Compression Ratio,Best Val Accuracy (%),Test Accuracy (%),Test Loss
+distilroberta,"82,119,938",4.33x,91.96,92.55,0.3124

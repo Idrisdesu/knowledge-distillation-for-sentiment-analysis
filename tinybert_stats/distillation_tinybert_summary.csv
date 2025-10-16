@@ -1,0 +1,2 @@
+Model,Parameters,Compression Ratio,Best Val Accuracy (%),Test Accuracy (%),Test Loss
+tinybert,"14,350,874",24.76x,87.36,86.70,0.4007

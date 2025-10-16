@@ -1,0 +1,2 @@
+Model,Parameters,Compression Ratio,Best Val Accuracy (%),Test Accuracy (%),Test Loss
+minilm,"33,360,770",10.65x,91.12,91.97,0.3200

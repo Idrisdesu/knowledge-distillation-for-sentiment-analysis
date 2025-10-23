@@ -1,0 +1,10 @@
+{
+  "model": "tinybert",
+  "best_params": {
+    "temperature": 4.0,
+    "alpha": 0.9,
+    "learning_rate": 5e-05
+  },
+  "best_val_accuracy": 0.8824,
+  "timestamp": "20251022_155234"
+}

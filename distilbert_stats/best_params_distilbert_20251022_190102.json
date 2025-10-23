@@ -1,0 +1,10 @@
+{
+  "model": "distilbert",
+  "best_params": {
+    "temperature": 1.5,
+    "alpha": 0.7,
+    "learning_rate": 2e-05
+  },
+  "best_val_accuracy": 0.9164,
+  "timestamp": "20251022_190102"
+}

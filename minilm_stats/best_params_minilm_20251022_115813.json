@@ -1,0 +1,10 @@
+{
+  "model": "minilm",
+  "best_params": {
+    "temperature": 3.0,
+    "alpha": 0.5,
+    "learning_rate": 5e-05
+  },
+  "best_val_accuracy": 0.9198,
+  "timestamp": "20251022_115813"
+}

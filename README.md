@@ -14,8 +14,46 @@ The project is divided into three main parts:
 
 The teacher model is a `roberta-large` model that has been fine-tuned on the IMDb dataset for sentiment classification (positive/negative).
 
-You can download the already fine-tuned model from the Hugging Face Hub:
-[Idrisdesu/fine_tuned_roberta_large_imdb](https://huggingface.co/Idrisdesu/fine_tuned_roberta_large_imdb)
+## Student Models
+
+We trained four different student models:
+
+| **Student Model** | **Number of Parameters** |
+|--------------------|--------------------------|
+| distilRoBERTa      | 82M                     |
+| distilBERT         | 66M                     |
+| MiniLM             | 33M                     |
+| TinyBERT           | 14.5M                   |
+
+*Table 1 – List and size of the student models.*
+
+---
+
+## Student Models Performance Comparison
+
+The following table compares the performance and size of the student models (trained with response-based distillation) against the teacher model, **RoBERTa Large**.
+
+| **Model**         | **Accuracy (%)** | **Compression Ratio** |
+|--------------------|------------------|------------------------|
+| RoBERTa Large      | 95.88            | 1.00                   |
+| distilRoBERTa      | 92.80            | 4.33                   |
+| distilBERT         | 91.64            | 5.31                   |
+| MiniLM             | 91.98            | 10.76                  |
+| TinyBERT           | 88.24            | 24.48                  |
+
+*Table 2 – Comparison of student models with the teacher model (RoBERTa Large).*
+
+## Model Links
+
+| **Model** | **Hugging Face Repository** |
+|------------|------------------------------|
+| RoBERTa Large | [Idrisdesu/fine_tuned_roberta_large_imdb](https://huggingface.co/Idrisdesu/fine_tuned_roberta_large_imdb) |
+| distilRoBERTa | [Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb/tree/main) |
+| distilBERT | [youssefennouri/distilled_distilbert_imdb](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) |
+| MiniLM | [youssefennouri/distilled_minilm_imdb](https://huggingface.co/youssefennouri/distilled_minilm_imdb) |
+| TinyBERT | [youssefennouri/distilled_tinybert_imdb](https://huggingface.co/youssefennouri/distilled_tinybert_imdb) |
+
+*Table 3 – Hugging Face repositories for each model.*
 
 ## How to Use
 

@@ -1,0 +1,5 @@
+model_name,avg_inference_time_s,std_dev_time_s,peak_gpu_memory_mb,avg_gpu_power_w
+distilled_model_imdb/distilled_distilbert_imdb,0.0023490432262420653,0.0014654545013563734,928.0625,92.88007219999992
+distilled_model_imdb/distilled_distilroberta_imdb,0.0026016328811645506,0.0003580560532635575,1076.0625,92.4576465999989
+distilled_model_imdb/distilled_minilm_imdb,0.004535077714920044,0.00010716161392087186,1108.0625,84.27759740000023
+distilled_model_imdb/distilled_tinybert_imdb,0.0018025318145751953,4.3519625683149146e-05,1108.0625,81.96643759999907

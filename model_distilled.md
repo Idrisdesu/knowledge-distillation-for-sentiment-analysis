@@ -9,7 +9,7 @@ Each model was distilled from a larger transformer to achieve a better trade-off
 
 | Model | Parameters | Test Accuracy | Hugging Face Repository |
 |--------|-------------|----------------|--------------------------|
-| **DistilRoBERTa (IMDB)** | ~82M | **xx.xx%** | [🔗 Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb) |
+| **DistilRoBERTa (IMDB)** | ~82M | **92.80%** | [🔗 Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb) |
 | **DistilBERT (IMDB)** | ~66M | **91.64%** | [🔗 youssefennouri/distilled_distilbert_imdb](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) |
 | **MiniLM (IMDB)** | ~33M | **91.98%** | [🔗 youssefennouri/distilled_minilm_imdb](youssefennouri/distilled_minilm_imdb) |
 | **TinyBERT (IMDB)** | ~14M | **88.24%** | [🔗 youssefennouri/distilled_tinybert_imdb](https://huggingface.co/youssefennouri/distilled_tinybert_imdb) |

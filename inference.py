@@ -146,7 +146,7 @@ if __name__ == "__main__":
         print("=" * 60)
 
     # Save results to CSV
-    csv_file = "inference_benchmark_results.csv"
+    csv_file = "inference_results.csv"
     csv_columns = ["model_name", "avg_inference_time_s", "std_dev_time_s", "peak_gpu_memory_mb", "avg_gpu_power_w"]
     
     try:

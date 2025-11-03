@@ -476,7 +476,7 @@ def final_training_with_best_params(student_choice, teacher_path, device,
     teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     
     # Load full dataset
-    _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset(
+    _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
         model_name=student_model_name,
         max_length=256,
         batch_size=16
@@ -684,3 +684,4 @@ if __name__ == "__main__":
     mp.set_start_method('spawn', force=True)
 
     main()
+

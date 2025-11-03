@@ -7,14 +7,14 @@ from torch.optim import AdamW
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_scheduler, DataCollatorWithPadding
 from tqdm import tqdm
 from metrics import compute_metrics
-from data_utils import load_and_prepare_dataset
+from data_utils import load_and_prepare_dataset_imdb, load_and_prepare_dataset_tweeteval
 
 # Hugging Face token
 hf_token = os.getenv("HF_TOKEN")
 
 # Model and Tokenizer
 model = AutoModelForSequenceClassification.from_pretrained("roberta-large", num_labels=2, use_auth_token=hf_token)
-tokenizer, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset(model_name="roberta-large", max_length=384, batch_size=16)
+tokenizer, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(model_name="roberta-large", max_length=384, batch_size=16)
 
 # DataLoaders
 batch_size = 16 # Originally 32 but Out of Memory
@@ -45,7 +45,7 @@ model.train()
 for epoch in range(1,num_epoch+1):
     progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch}")
     for batch in progress_bar:
-        batch = {k: v.to(device) for k, v in batch.items()}
+        batch = {k: v.to(device) for k, v in batch.items() if k != 'text'}
         outputs = model(**batch)
         if torch.cuda.device_count() > 1 and hasattr(model, 'module') and isinstance(model, nn.DataParallel):
             loss = outputs.loss.mean()  # For DataParallel
@@ -65,7 +65,7 @@ for epoch in range(1,num_epoch+1):
     all_preds, all_labels = [], []
     with torch.no_grad():
         for batch in eval_dataloader:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v.to(device) for k, v in batch.items() if k != 'text'}
             outputs = model(**batch)
             preds = torch.argmax(outputs.logits, dim=-1)
             all_preds.append(preds)

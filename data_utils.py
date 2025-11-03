@@ -25,7 +25,7 @@ class CustomDataCollator(DataCollatorWithPadding):
         batch["text"] = texts
         return batch
 
-def load_and_prepare_dataset(model_name="FacebookAI/roberta-large", max_length=384, batch_size=16):
+def load_and_prepare_dataset_imdb(model_name="FacebookAI/roberta-large", max_length=384, batch_size=16):
     """
     Load and prepare IMDB dataset for training.
     
@@ -67,6 +67,40 @@ def load_and_prepare_dataset(model_name="FacebookAI/roberta-large", max_length=3
     # Let's keep it simple and not remove columns, relying on the collator.
 
     # Use our custom data collator
+    data_collator = CustomDataCollator(tokenizer=tokenizer, return_tensors="pt")
+
+    return tokenizer, train_ds, val_ds, test_ds, data_collator
+
+def load_and_prepare_dataset_tweeteval(task_name: str, model_name="FacebookAI/roberta-large", max_length=256, batch_size=16):
+    """
+    Load and prepare TweetEval dataset for a specific task.
+    This version reduces the max_length since tweets are shorter.
+    """
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if task_name == "sentiment":
+        print("Loading TweetEval Sentiment dataset")
+        ds = load_dataset("tweet_eval", "sentiment")
+    elif task_name == "hate":
+        print("Loading TweetEval Hate dataset")
+        ds = load_dataset("tweet_eval", "hate")
+    else:
+        raise ValueError(f"Unsupported task_name: {task_name}")
+  
+    def tokenize_function(examples):
+        return tokenizer(
+            examples["text"],
+            truncation=True,
+            max_length=max_length
+        )
+    
+    train_ds = ds["train"].map(tokenize_function, batched=True)
+    val_ds = ds["validation"].map(tokenize_function, batched=True)
+    test_ds = ds["test"].map(tokenize_function, batched=True)
+
+    train_ds = train_ds.rename_column("label", "labels")
+    val_ds = val_ds.rename_column("label", "labels")
+    test_ds = test_ds.rename_column("label", "labels")
+
     data_collator = CustomDataCollator(tokenizer=tokenizer, return_tensors="pt")
 
     return tokenizer, train_ds, val_ds, test_ds, data_collator

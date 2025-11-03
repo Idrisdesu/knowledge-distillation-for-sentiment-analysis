@@ -14,7 +14,7 @@ import numpy as np
 import csv
 import os
 from datetime import datetime
-from data_utils import load_and_prepare_dataset
+from data_utils import load_and_prepare_dataset_imdb
 import argparse
 import json
 from itertools import product
@@ -183,7 +183,7 @@ def train_with_hyperparams_worker(gpu_id, task_queue, result_queue, teacher_path
             student_tokenizer = AutoTokenizer.from_pretrained(student_model_name)
             
             # Load dataset with subset
-            _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset(
+            _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
                 model_name=student_model_name,
                 max_length=256,
                 batch_size=16
@@ -682,4 +682,5 @@ def main():
 if __name__ == "__main__":
     # Required for multiprocessing on CUDA
     mp.set_start_method('spawn', force=True)
+
     main()

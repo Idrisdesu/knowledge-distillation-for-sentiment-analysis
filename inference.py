@@ -95,7 +95,7 @@ if __name__ == "__main__":
         if device.type == 'cuda':
             torch.cuda.synchronize()
 
-        mem_after_load, _ = get_gpu_metrics()
+        mem_after_load, _ = get_gpu_metrics(handle)
 
         all_inference_times = []
         all_power_readings = []
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             _, current_time = predict_sentiment_and_time(sentence, model, tokenizer, device)
             all_inference_times.append(current_time)
 
-            mem_during_run, power_during_run = get_gpu_metrics()
+            mem_during_run, power_during_run = get_gpu_metrics(handle)
             all_power_readings.append(power_during_run)
             if mem_during_run > peak_mem_reading:
                 peak_mem_reading = mem_during_run

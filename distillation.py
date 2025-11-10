@@ -6,6 +6,7 @@ from torch.cuda.amp import autocast, GradScaler
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
+    AutoConfig,
     get_linear_schedule_with_warmup
 )
 from torch.optim import AdamW
@@ -14,7 +15,10 @@ import numpy as np
 import csv
 import os
 from datetime import datetime
-from data_utils import load_and_prepare_dataset_imdb
+from data_utils import (
+    load_and_prepare_dataset_imdb, 
+    load_and_prepare_dataset_tweeteval
+)
 import argparse
 import json
 from itertools import product
@@ -149,7 +153,7 @@ class DistillationTrainer:
 
 
 def train_with_hyperparams_worker(gpu_id, task_queue, result_queue, teacher_path, 
-                                   shared_args, use_amp=True):
+                                  shared_args, use_amp=True):
     """Worker process for parallel training on specific GPU"""
     
     # Set device for this worker
@@ -178,16 +182,25 @@ def train_with_hyperparams_worker(gpu_id, task_queue, result_queue, teacher_path
             student_model_name = STUDENT_MODELS[student_choice]
             student_model = AutoModelForSequenceClassification.from_pretrained(
                 student_model_name,
-                num_labels=teacher_model.config.num_labels
+                num_labels=teacher_model.config.num_labels, # Dynamique
             )
             student_tokenizer = AutoTokenizer.from_pretrained(student_model_name)
             
-            # Load dataset with subset
-            _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
-                model_name=student_model_name,
-                max_length=256,
-                batch_size=16
-            )
+            if shared_args.dataset == 'imdb':
+                _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
+                    model_name=student_model_name,
+                    max_length=384,
+                    batch_size=16
+                )
+            elif shared_args.dataset == 'tweeteval':
+                _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_tweeteval(
+                    task_name=shared_args.task,
+                    model_name=student_model_name,
+                    max_length=512,
+                    batch_size=32
+                )
+            else:
+                raise ValueError(f"Unknown dataset: {shared_args.dataset}")
             
             # Use subset for faster search
             if subset_ratio < 1.0:
@@ -260,19 +273,15 @@ def train_with_hyperparams_worker(gpu_id, task_queue, result_queue, teacher_path
 
 
 def successive_halving_search(student_choice, teacher_path, hyperparam_grid, 
-                              num_gpus=2, use_amp=True):
+                              num_gpus=2, use_amp=True, shared_args=None):
     """
     Successive Halving Grid Search with Multi-GPU parallelization
-    
-    Round 1: Train all configs for 1 epoch with 30% data -> Keep top 50%
-    Round 2: Train top 50% for 2 epochs with 50% data -> Keep top 50%
-    Round 3: Train top 25% for 3 epochs with 100% data -> Return best
     """
     
     print(f"\n{'='*80}")
-    print(f"🚀 SUCCESSIVE HALVING SEARCH: {student_choice.upper()}")
-    print(f"   Strategy: Multi-GPU Parallel + Early Stopping + AMP")
-    print(f"   GPUs: {num_gpus}")
+    print(f"🚀 SUCCESSIVE HALVING SEARCH: {student_choice.upper()} on {shared_args.dataset.upper()}")
+    print(f"    Strategy: Multi-GPU Parallel + Early Stopping + AMP")
+    print(f"    GPUs: {num_gpus}")
     print(f"{'='*80}")
     
     # Generate all combinations
@@ -289,7 +298,7 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
     
     # Round 1: Quick screening with 1 epoch, 30% data
     print(f"\n🔍 Round 1: Screening {total_combinations} configs")
-    print(f"   Settings: 1 epoch, 30% data, patience=1")
+    print(f"    Settings: 1 epoch, 30% data, patience=1")
     
     round1_results = parallel_train_configs(
         student_choice=student_choice,
@@ -300,7 +309,8 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
         subset_ratio=0.3,
         num_gpus=num_gpus,
         use_amp=use_amp,
-        round_name="Round 1"
+        round_name="Round 1",
+        shared_args=shared_args
     )
     
     all_results.extend(round1_results)
@@ -310,12 +320,13 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
     top_half = top_half[:max(1, len(top_half) // 2)]
     top_half_combos = [(r['temperature'], r['alpha'], r['learning_rate']) for r in top_half]
     
-    print(f"   ✓ Top 50%: {len(top_half)} configs kept")
-    print(f"   Best so far: {top_half[0]['val_accuracy']*100:.2f}%")
+    print(f"    ✓ Top 50%: {len(top_half)} configs kept")
+    if top_half:
+        print(f"    Best so far: {top_half[0]['val_accuracy']*100:.2f}%")
     
     # Round 2: Medium training with 2 epochs, 50% data
     print(f"\n🔍 Round 2: Refining {len(top_half)} configs")
-    print(f"   Settings: 2 epochs, 50% data, patience=1")
+    print(f"    Settings: 2 epochs, 50% data, patience=1")
     
     round2_results = parallel_train_configs(
         student_choice=student_choice,
@@ -326,7 +337,8 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
         subset_ratio=0.5,
         num_gpus=num_gpus,
         use_amp=use_amp,
-        round_name="Round 2"
+        round_name="Round 2",
+        shared_args=shared_args
     )
     
     all_results.extend(round2_results)
@@ -336,12 +348,13 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
     top_quarter = top_quarter[:max(1, len(top_quarter) // 2)]
     top_quarter_combos = [(r['temperature'], r['alpha'], r['learning_rate']) for r in top_quarter]
     
-    print(f"   ✓ Top 50%: {len(top_quarter)} configs kept")
-    print(f"   Best so far: {top_quarter[0]['val_accuracy']*100:.2f}%")
+    print(f"    ✓ Top 50%: {len(top_quarter)} configs kept")
+    if top_quarter:
+        print(f"    Best so far: {top_quarter[0]['val_accuracy']*100:.2f}%")
     
     # Round 3: Final training with 3 epochs, 100% data
     print(f"\n🔍 Round 3: Final evaluation of {len(top_quarter)} configs")
-    print(f"   Settings: 3 epochs, 100% data, patience=2")
+    print(f"    Settings: 3 epochs, 100% data, patience=2")
     
     round3_results = parallel_train_configs(
         student_choice=student_choice,
@@ -352,11 +365,16 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
         subset_ratio=1.0,
         num_gpus=num_gpus,
         use_amp=use_amp,
-        round_name="Round 3"
+        round_name="Round 3",
+        shared_args=shared_args
     )
     
     all_results.extend(round3_results)
     
+    if not round3_results:
+        print("⚠️ No results from final round. Exiting search.")
+        return {}, 0.0, all_results
+
     # Find best overall
     best_result = max(round3_results, key=lambda x: x['val_accuracy'])
     best_params = {
@@ -370,20 +388,17 @@ def successive_halving_search(student_choice, teacher_path, hyperparam_grid,
     print(f"✅ SEARCH COMPLETE")
     print(f"{'='*80}")
     print(f"🏆 Best Hyperparameters:")
-    print(f"   Temperature: {best_params['temperature']}")
-    print(f"   Alpha: {best_params['alpha']}")
-    print(f"   Learning Rate: {best_params['learning_rate']}")
-    print(f"   Best Val Accuracy: {best_accuracy*100:.2f}%")
-    print(f"\n📈 Search efficiency:")
-    print(f"   Evaluated {total_combinations} initial configs")
-    print(f"   Total training runs: {len(all_results)}")
-    print(f"   Time saved vs full grid: ~{(total_combinations * 3) / len(all_results):.1f}x")
+    print(f"    Temperature: {best_params['temperature']}")
+    print(f"    Alpha: {best_params['alpha']}")
+    print(f"    Learning Rate: {best_params['learning_rate']}")
+    print(f"    Best Val Accuracy: {best_accuracy*100:.2f}%")
     
     return best_params, best_accuracy, all_results
 
 
 def parallel_train_configs(student_choice, teacher_path, param_combinations, 
-                           num_epochs, patience, subset_ratio, num_gpus, use_amp, round_name):
+                           num_epochs, patience, subset_ratio, num_gpus, use_amp, round_name,
+                           shared_args=None):
     """Execute parallel training across multiple GPUs"""
     
     # Create multiprocessing queues
@@ -404,7 +419,8 @@ def parallel_train_configs(student_choice, teacher_path, param_combinations,
     for gpu_id in range(num_gpus):
         p = ctx.Process(
             target=train_with_hyperparams_worker,
-            args=(gpu_id, task_queue, result_queue, teacher_path, {}, use_amp)
+            args=(gpu_id, task_queue, result_queue, teacher_path, 
+                  shared_args, use_amp)
         )
         p.start()
         processes.append(p)
@@ -451,36 +467,49 @@ def parallel_train_configs(student_choice, teacher_path, param_combinations,
 
 
 def final_training_with_best_params(student_choice, teacher_path, device, 
-                                    best_params, num_epochs=5, use_amp=True):
+                                    best_params, num_epochs=5, use_amp=True, 
+                                    shared_args=None):
     """Final training with best hyperparameters on full data"""
     
     print(f"\n{'='*80}")
-    print(f"🎓 FINAL TRAINING: {student_choice.upper()}")
+    print(f"🎓 FINAL TRAINING: {student_choice.upper()} on {shared_args.dataset.upper()}")
     print(f"{'='*80}")
-    print(f"⚙️  Best hyperparameters:")
-    print(f"   Temperature: {best_params['temperature']}")
-    print(f"   Alpha: {best_params['alpha']}")
-    print(f"   Learning Rate: {best_params['learning_rate']}")
-    print(f"   Epochs: {num_epochs}")
-    print(f"   Mixed Precision: {use_amp}")
+    print(f"⚙️   Best hyperparameters:")
+    print(f"    Temperature: {best_params['temperature']}")
+    print(f"    Alpha: {best_params['alpha']}")
+    print(f"    Learning Rate: {best_params['learning_rate']}")
+    print(f"    Epochs: {num_epochs}")
+    print(f"    Mixed Precision: {use_amp}")
     
-    # Load models
-    student_model_name = STUDENT_MODELS[student_choice]
-    student_model = AutoModelForSequenceClassification.from_pretrained(
-        student_model_name,
-        num_labels=2  # Binary classification for IMDB
-    )
-    student_tokenizer = AutoTokenizer.from_pretrained(student_model_name)
     
     teacher_model = AutoModelForSequenceClassification.from_pretrained(teacher_path)
     teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_path)
+    num_labels = teacher_model.config.num_labels
     
-    # Load full dataset
-    _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
-        model_name=student_model_name,
-        max_length=256,
-        batch_size=16
+    student_model_name = STUDENT_MODELS[student_choice]
+    student_model = AutoModelForSequenceClassification.from_pretrained(
+        student_model_name,
+        num_labels=num_labels,
     )
+    student_tokenizer = AutoTokenizer.from_pretrained(student_model_name)
+    
+    if shared_args.dataset == 'imdb':
+        _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_imdb(
+            model_name=student_model_name,
+            max_length=384,
+            batch_size=16
+        )
+    elif shared_args.dataset == 'tweeteval':
+        _, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_tweeteval(
+            task_name=shared_args.task,
+            model_name=student_model_name,
+            max_length=512,
+            batch_size=32
+        )
+    else:
+        raise ValueError(f"Unknown dataset: {shared_args.dataset}")
+    
+    # --- FIN MODIFICATION ---
     
     train_loader = DataLoader(train_ds, batch_size=16, shuffle=True, collate_fn=data_collator)
     val_loader = DataLoader(val_ds, batch_size=32, collate_fn=data_collator)
@@ -518,10 +547,15 @@ def final_training_with_best_params(student_choice, teacher_path, device,
         
         if val_accuracy > best_val_acc:
             best_val_acc = val_accuracy
-            save_path = f"./distilled_{student_choice}_imdb_best"
+            
+            # --- MODIFIÉ: Logique de sauvegarde dynamique ---
+            # Construit le nom de sauvegarde en fonction du modèle et du dataset
+            save_path = f"./distilled_{student_choice}_{shared_args.dataset}_best"
+            # --- FIN MODIFICATION ---
+            
             student_model.save_pretrained(save_path)
             student_tokenizer.save_pretrained(save_path)
-            tqdm.write(f"   💾 Saved checkpoint: {val_accuracy*100:.2f}%")
+            tqdm.write(f"    💾 Saved checkpoint to {save_path}: {val_accuracy*100:.2f}%")
         
         epoch_results.append({
             'epoch': epoch + 1,
@@ -532,8 +566,8 @@ def final_training_with_best_params(student_choice, teacher_path, device,
     # Test evaluation
     print(f"\n🧪 Final Test Evaluation:")
     test_accuracy, test_loss = trainer.evaluate(test_loader)
-    print(f"   Test Accuracy: {test_accuracy*100:.2f}%")
-    print(f"   Test Loss: {test_loss:.4f}")
+    print(f"    Test Accuracy: {test_accuracy*100:.2f}%")
+    print(f"    Test Loss: {test_loss:.4f}")
     
     return {
         'model_name': student_choice,
@@ -545,13 +579,13 @@ def final_training_with_best_params(student_choice, teacher_path, device,
     }
 
 
-def save_results(student_choice, all_results, best_params, best_accuracy):
+def save_results(student_choice, all_results, best_params, best_accuracy, dataset_name): # MODIFIÉ: Accepte dataset_name
     """Save search results"""
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    # Save all results
-    results_file = f'hypersearch_{student_choice}_{timestamp}.csv'
+    # MODIFIÉ: Nom de fichier inclut le dataset
+    results_file = f'hypersearch_{student_choice}_{dataset_name}_{timestamp}.csv'
     with open(results_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['Temperature', 'Alpha', 'Learning Rate', 'Val Accuracy (%)', 'Epochs Trained'])
@@ -565,19 +599,20 @@ def save_results(student_choice, all_results, best_params, best_accuracy):
                 result.get('epochs_trained', 'N/A')
             ])
     
-    print(f"   📄 Results saved: {results_file}")
+    print(f"    📄 Results saved: {results_file}")
     
-    # Save best params
-    params_file = f'best_params_{student_choice}_{timestamp}.json'
+    # MODIFIÉ: Nom de fichier inclut le dataset
+    params_file = f'best_params_{student_choice}_{dataset_name}_{timestamp}.json'
     with open(params_file, 'w') as f:
         json.dump({
             'model': student_choice,
+            'dataset': dataset_name, # MODIFIÉ: Ajout du dataset
             'best_params': best_params,
             'best_val_accuracy': float(best_accuracy),
             'timestamp': timestamp
         }, f, indent=2)
     
-    print(f"   📄 Best params saved: {params_file}")
+    print(f"    📄 Best params saved: {params_file}")
 
 
 def main():
@@ -589,14 +624,32 @@ def main():
         required=True,
         help='Student model to train (or "all")'
     )
+    
+    # --- MODIFIÉ: Ajout des arguments de dataset ---
+    parser.add_argument(
+        '--dataset', 
+        type=str, 
+        choices=['imdb', 'tweeteval'], 
+        required=True, 
+        help='Dataset to use (imdb or tweeteval)'
+    )
+    parser.add_argument(
+        '--task', 
+        type=str, 
+        default='sentiment', 
+        choices=['sentiment', 'hate'], 
+        help='Specific task for TweetEval (default: sentiment)'
+    )
+    # --- FIN MODIFICATION ---
+    
     parser.add_argument('--final_epochs', type=int, default=5, 
-                       help='Epochs for final training')
+                        help='Epochs for final training')
     parser.add_argument('--teacher_path', type=str, default='./fine_tuned_roberta_large_imdb', 
-                       help='Path to teacher model')
+                        help='Path to teacher model')
     parser.add_argument('--no_amp', action='store_true',
-                       help='Disable mixed precision training')
+                        help='Disable mixed precision training')
     parser.add_argument('--gpus', type=int, default=None,
-                       help='Number of GPUs to use (default: all available)')
+                        help='Number of GPUs to use (default: all available)')
     
     args = parser.parse_args()
     
@@ -620,13 +673,14 @@ def main():
         models_to_train = [args.model]
     
     print(f"🎯 Models: {', '.join(m.upper() for m in models_to_train)}")
+    print(f"📚 Dataset: {args.dataset.upper()} (Task: {args.task})")
     
     all_results = {}
     overall_start = time.time()
     
     for student_choice in models_to_train:
         print(f"\n\n{'#'*80}")
-        print(f"   PROCESSING: {student_choice.upper()}")
+        print(f"    PROCESSING: {student_choice.upper()} on {args.dataset.upper()}")
         print(f"{'#'*80}")
         
         model_start = time.time()
@@ -637,11 +691,12 @@ def main():
             teacher_path=args.teacher_path,
             hyperparam_grid=HYPERPARAM_GRID,
             num_gpus=num_gpus,
-            use_amp=use_amp
+            use_amp=use_amp,
+            shared_args=args  # MODIFIÉ: Passe tous les args
         )
         
         # Save search results
-        save_results(student_choice, search_results, best_params, best_accuracy)
+        save_results(student_choice, search_results, best_params, best_accuracy, args.dataset) # MODIFIÉ
         
         # Final training
         final_result = final_training_with_best_params(
@@ -650,22 +705,23 @@ def main():
             device=device,
             best_params=best_params,
             num_epochs=args.final_epochs,
-            use_amp=use_amp
+            use_amp=use_amp,
+            shared_args=args # MODIFIÉ: Passe tous les args
         )
         
         all_results[student_choice] = final_result
         
         model_time = time.time() - model_start
         print(f"\n✅ {student_choice.upper()} completed in {model_time/60:.1f} minutes")
-        print(f"   Test Accuracy: {final_result['test_accuracy']*100:.2f}%")
+        print(f"    Test Accuracy: {final_result['test_accuracy']*100:.2f}%")
     
     # Final summary
     total_time = time.time() - overall_start
     print(f"\n\n{'='*80}")
     print("🎉 ALL TRAINING COMPLETED!")
     print(f"{'='*80}")
-    print(f"⏱️  Total time: {total_time/60:.1f} minutes ({total_time/3600:.2f} hours)")
-    print(f"\n📊 Results Summary:")
+    print(f"⏱️   Total time: {total_time/60:.1f} minutes ({total_time/3600:.2f} hours)")
+    print(f"\n📊 Results Summary for {args.dataset.upper()}:")
     print(f"{'─'*80}")
     
     for model_name, result in all_results.items():
@@ -684,4 +740,3 @@ if __name__ == "__main__":
     mp.set_start_method('spawn', force=True)
 
     main()
-

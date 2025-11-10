@@ -1,0 +1,11 @@
+{
+  "model": "minilm",
+  "dataset": "tweeteval",
+  "best_params": {
+    "temperature": 4.0,
+    "alpha": 0.7,
+    "learning_rate": 5e-05
+  },
+  "best_val_accuracy": 0.756,
+  "timestamp": "20251103_170625"
+}

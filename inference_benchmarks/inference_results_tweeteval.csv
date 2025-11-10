@@ -1,0 +1,5 @@
+model_name,avg_inference_time_s,std_dev_time_s,peak_gpu_memory_mb,avg_gpu_power_w
+fine_tuned_roberta_large_tweeteval_sentiment,0.009423340368270874,0.001042114592441394,2026.0625,204.68580959999989
+distilled_model_tweeteval/distilled_distilroberta_tweeteval,0.002770201253890991,5.786463487062643e-05,2026.0625,108.4077477999998
+distilled_model_tweeteval/distilled_distilbert_tweeteval,0.0025316398620605467,8.198474497244978e-05,2026.0625,98.8266364000004
+distilled_model_tweeteval/distilled_minilm_tweeteval,0.004832346725463867,9.149993336868476e-05,2056.0625,87.23388459999984

@@ -1,0 +1,11 @@
+{
+  "model": "distilroberta",
+  "dataset": "tweeteval",
+  "best_params": {
+    "temperature": 2.0,
+    "alpha": 0.5,
+    "learning_rate": 5e-05
+  },
+  "best_val_accuracy": 0.744,
+  "timestamp": "20251104_012718"
+}

@@ -8,7 +8,7 @@ import random
 import pynvml
 import csv
 import os
-from inference import get_gpu_metrics, predict_sentiment_and_time, load_sentences_from_file
+from src.inference.inference import get_gpu_metrics, predict_sentiment_and_time, load_sentences_from_file
 
 # NVML Initialization
 try:
@@ -23,17 +23,17 @@ except pynvml.NVMLError:
 
 if __name__ == "__main__":
     models_to_benchmark = {
-        "distilled_models_imdb_int8/distilled_distilbert_imdb_int8_ptq_onnx": 
-            "distilled_model_imdb/distilled_distilbert_imdb",
+        "results/distilled_models_imdb_int8/distilled_distilbert_imdb_int8_ptq_onnx": 
+            "results/distilled_model_imdb/distilled_distilbert_imdb",
         
-        "distilled_models_imdb_int8/distilled_distilroberta_imdb_int8_ptq_onnx":
-            "distilled_model_imdb/distilled_distilroberta_imdb",
+        "results/distilled_models_imdb_int8/distilled_distilroberta_imdb_int8_ptq_onnx":
+            "results/distilled_model_imdb/distilled_distilroberta_imdb",
 
-        "distilled_models_imdb_int8/distilled_minilm_imdb_int8_ptq_onnx":
-            "distilled_model_imdb/distilled_minilm_imdb",
+        "results/distilled_models_imdb_int8/distilled_minilm_imdb_int8_ptq_onnx":
+            "results/distilled_model_imdb/distilled_minilm_imdb",
 
-        "distilled_models_imdb_int8/distilled_tinybert_imdb_int8_ptq_onnx":
-            "distilled_model_imdb/distilled_tinybert_imdb"
+        "results/distilled_models_imdb_int8/distilled_tinybert_imdb_int8_ptq_onnx":
+            "results/distilled_model_imdb/distilled_tinybert_imdb"
     }
 
     monte_carlo_sentences = load_sentences_from_file("monte_carlo_sentences.txt")
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         print("=" * 60)
     
     # Save results to CSV
-    csv_file = "inference_results_quantized.csv"
+    csv_file = "results/benchmarks/inference_results_quantized.csv"
     csv_columns = ["model_name", "avg_inference_time_s", "std_dev_time_s", "peak_gpu_memory_mb", "avg_gpu_power_w"]
     
     if results:

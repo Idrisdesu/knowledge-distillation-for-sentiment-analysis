@@ -1,5 +1,15 @@
+# Core ML
 torch
 transformers
 datasets
-tqdm
+numpy
 scikit-learn
+
+# Utilities
+tqdm
+
+# ONNX for quantization and inference
+optimum[onnxruntime]
+
+# GPU monitoring
+pynvml

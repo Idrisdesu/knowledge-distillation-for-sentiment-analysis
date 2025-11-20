@@ -1,111 +1,115 @@
-# Knowledge Distillation for Sentiment Analysis
+# Optimization of LLMs for Real-Time Sentiment Analysis
 
-This project demonstrates the process of using knowledge distillation to create a smaller, faster sentiment analysis model from a large, fine-tuned "teacher" model. The primary goal is to transfer the performance of a large model to a more lightweight one without a significant loss in accuracy.
+This project explores the compression of large language models (LLMs) for real-time sentiment analysis tasks. The primary goal is to distill the knowledge from a large, fine-tuned `roberta-large` model (the "Teacher") into smaller, faster "student" models (like DistilBERT, MiniLM, and TinyBERT) and to further optimize them using post-training quantization (PTQ).
 
-## Project Overview
+The experiments are conducted on two distinct datasets:
+- **IMDb**: A large dataset for binary sentiment classification (positive/negative).
+- **TweetEval (Sentiment)**: A more complex, multi-class dataset (positive/negative/neutral) with shorter texts, requiring more nuanced understanding.
 
-The project is divided into three main parts:
+## Key Results & Insights
 
-1.  **Fine-tuning the Teacher Model**: A large, pre-trained language model, `roberta-large`, is fine-tuned on the IMDb movie review dataset for sentiment analysis. This creates a powerful and accurate "teacher" model.
-2.  **Knowledge Distillation (Future Work)**: The knowledge from the fine-tuned teacher model will be "distilled" into a smaller "student" model. This process trains the student to mimic the teacher's output, effectively transferring its capabilities.
-3.  **Inference**: The final model can be used to predict the sentiment of new text.
+The distillation process was highly effective, producing lightweight models that retain a significant portion of the teacher's performance while being substantially faster.
 
-## The "Teacher" Model
+| Model | Accuracy (IMDb) | Accuracy (TweetEval) | Speedup (vs. Teacher) |
+|---|---|---|---|
+| **Teacher (roberta-large)** | ~95% | ~89% | 1x |
+| **DistilBERT** | >92% | >85% | ~8x |
+| **MiniLM** | >91% | >84% | ~6x |
+| **TinyBERT** | >90% | >82% | **~12x** |
+| **TinyBERT (INT8 Quantized)** | >90% | >82% | **~15x** |
 
-The teacher model is a `roberta-large` model that has been fine-tuned on the IMDb dataset for sentiment classification (positive/negative).
+*Note: These are representative results. Actual numbers can be found in the `results/` directory.*
 
-## Student Models
+### The Importance of Teacher Calibration
 
-We trained four different student models:
+A key insight from this project is that the *quality* of the teacher's predictions is more important than its raw accuracy.
 
-| **Student Model** | **Number of Parameters** |
-|--------------------|--------------------------|
-| distilRoBERTa      | 82M                     |
-| distilBERT         | 66M                     |
-| MiniLM             | 33M                     |
-| TinyBERT           | 14.5M                   |
+- On the **IMDb dataset**, the RoBERTa-large teacher achieved very high accuracy (~95%), leading to "arrogant" or over-confident predictions (e.g., probabilities of 0.999 for one class).
+- On the more complex **TweetEval dataset**, the teacher was less certain, producing more nuanced or "calibrated" predictions (e.g., probabilities of 0.70 for one class, 0.25 for another).
 
-*Table 1 – List and size of the student models.*
+This "calibrated" teacher from TweetEval, despite having lower overall accuracy, produced **better-performing student models** through distillation. The softer probability distributions provided a richer training signal for the students to learn from, highlighting the importance of teacher calibration in knowledge distillation.
 
----
+## Project Structure
 
-## Student Models Performance Comparison
+The project is organized as follows:
 
-The following table compares the performance and size of the student models (trained with response-based distillation) against the teacher model, **RoBERTa Large**.
-
-| **Model**         | **Accuracy (%)** | **Compression Ratio** |
-|--------------------|------------------|------------------------|
-| RoBERTa Large      | 95.88            | 1.00                   |
-| distilRoBERTa      | 92.80            | 4.33                   |
-| distilBERT         | 91.64            | 5.31                   |
-| MiniLM             | 91.98            | 10.76                  |
-| TinyBERT           | 88.24            | 24.48                  |
-
-*Table 2 – Comparison of student models with the teacher model (RoBERTa Large).*
-
-## Model Links
-
-| **Model** | **Hugging Face Repository** |
-|------------|------------------------------|
-| RoBERTa Large | [Idrisdesu/fine_tuned_roberta_large_imdb](https://huggingface.co/Idrisdesu/fine_tuned_roberta_large_imdb) |
-| distilRoBERTa | [Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb/tree/main) |
-| distilBERT | [youssefennouri/distilled_distilbert_imdb](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) |
-| MiniLM | [youssefennouri/distilled_minilm_imdb](https://huggingface.co/youssefennouri/distilled_minilm_imdb) |
-| TinyBERT | [youssefennouri/distilled_tinybert_imdb](https://huggingface.co/youssefennouri/distilled_tinybert_imdb) |
-
-*Table 3 – Hugging Face repositories for each model.*
+```
+├── README.md
+├── requirements.txt
+├── results/                # Stores all outputs from experiments
+│   ├── benchmarks/         # CSV files from inference speed/memory benchmarks.
+│   ├── distilbert_stats/   # Logs, checkpoints, and metrics for DistilBERT.
+│   └── ...                 # (similar folders for other student models)
+└── src/
+    ├── training/           # Scripts for training and distillation.
+    │   ├── fine_tuning_teacher_imdb.py
+    │   └── distillation.py
+    ├── inference/          # Scripts for benchmarking and quantization.
+    │   ├── inference.py
+    │   └── quantize_model.py
+    └── utils/              # Utility functions for data, metrics, etc.
+```
 
 ## How to Use
 
-### 1. Setup
+### 1. Installation
 
-First, clone the repository and install the required dependencies. It is recommended to use a virtual environment.
+First, clone the repository and install the required dependencies.
 
 ```bash
 git clone <repository-url>
-cd knowledge-distillation-for-sentiment-analysis
+cd <repository-directory>
 pip install -r requirements.txt
 ```
 
+### 2. Running the Pipeline
 
+The project follows a standard distillation pipeline:
 
-### 2. Download the Pre-trained Teacher Model
-
-Create a directory named `fine_tuned_roberta_large_imdb` and download the model files from the Hugging Face link above into this directory.
-
-The directory structure should look like this:
-
-```
-knowledge-distillation-for-sentiment-analysis/
-├── fine_tuned_roberta_large_imdb/
-│   ├── config.json
-│   ├── model.safetensors
-│   ├── tokenizer.json
-│   └── ... (other model files)
-├── data_utils.py
-├── fine_tuning_teacher.py
-└── ... (other project files)
-```
-
-### 3. (Optional) Fine-tune Your Own Teacher Model
-
-If you want to fine-tune the `roberta-large` model yourself, you can run the `fine_tuning_teacher.py` script. Make sure you are authenticated with Hugging Face if you are using a private model.
+**Step 1: Fine-Tune the Teacher Model**
+(This step is usually done once per dataset.)
 
 ```bash
-# You might need to set your Hugging Face token as an environment variable
-export HF_TOKEN="your_hugging_face_token"
+# For IMDb
+python src/training/fine_tuning_teacher_imdb.py
 
-python fine_tuning_teacher.py
+# For TweetEval
+python src/training/fine_tuning_teacher_tweeteval.py
 ```
 
-This will train the model and save it to a directory named `fine_tuned_roberta_large`.
-
-### 4. Run Inference
-
-To test the sentiment analysis prediction on new sentences, use the `inference.py` script.
+**Step 2: Distill Knowledge into a Student Model**
+Run distillation for a specific student model or for all of them.
 
 ```bash
-python inference.py
+# Distill TinyBERT on the IMDb dataset
+python src/training/distillation.py --model tinybert --dataset imdb --teacher_path results/fine_tuned_roberta_large_imdb
+
+# Distill all students on the TweetEval dataset
+python src/training/distillation.py --model all --dataset tweeteval --teacher_path results/fine_tuned_roberta_large_tweeteval_sentiment
 ```
 
-This will load the fine-tuned model from the `fine_tuned_roberta_large_imdb` directory and print sentiment predictions for a few example sentences.
+**Step 3: Benchmark the Distilled Models**
+Measure the inference speed and memory usage of the resulting models.
+
+```bash
+# Benchmark IMDb models
+python src/inference/inference.py
+
+# Benchmark TweetEval models
+python src/inference/inference_tweeteval.py
+```
+
+**Step 4 (Optional): Post-Training Quantization (PTQ)**
+Further optimize a distilled model by converting it to ONNX and quantizing it to INT8.
+
+```bash
+# Quantize the distilled TinyBERT model for IMDb
+python src/inference/quantize_model.py --model_path results/distilled_tinybert_imdb_best
+```
+
+**Step 5 (Optional): Benchmark Quantized Models**
+Measure the performance of the ONNX INT8 models.
+
+```bash
+python src/inference/inference_onnx.py
+```

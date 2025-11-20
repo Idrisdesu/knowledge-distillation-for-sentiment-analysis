@@ -6,15 +6,15 @@ from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_scheduler
 from tqdm import tqdm
-from metrics import compute_metrics
-from data_utils import load_and_prepare_dataset_tweeteval 
+from src.utils.metrics import compute_metrics
+from src.utils.data_utils import load_and_prepare_dataset_tweeteval 
 
 # Hugging Face token
 hf_token = os.getenv("HF_TOKEN")
 
 TASK_NAME = "sentiment" # The task
 TEACHER_MODEL_NAME = "roberta-large"
-MODEL_SAVE_DIR = f'fine_tuned_roberta_large_tweeteval_{TASK_NAME}'
+MODEL_SAVE_DIR = f'results/fine_tuned_roberta_large_tweeteval_{TASK_NAME}'
 
 print(f"Loading TweetEval dataset for the task: {TASK_NAME}")
 tokenizer, train_ds, val_ds, test_ds, data_collator = load_and_prepare_dataset_tweeteval(

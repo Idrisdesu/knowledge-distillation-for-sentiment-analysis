@@ -5,7 +5,6 @@ import os
 from optimum.onnxruntime import ORTQuantizer, ORTModelForSequenceClassification
 from optimum.onnxruntime.configuration import AutoQuantizationConfig
 from optimum.onnxruntime.configuration import CalibrationConfig, CalibrationMethod
-from data_utils import tokenize_function
 '''
 We need an ONNX ecosystem for PTQ quantization.
 Thus, first we export the FP32 model to ONNX then we quantize it with a decicated calibration dataloader.
@@ -35,7 +34,7 @@ def get_calibration_dataloader(model_path, max_length=256, num_samples=100):
 def main_quantize(model_path):
     base_output_name = os.path.basename(model_path.rstrip('/\\'))
     onnx_fp32_path = f"{model_path}_onnx_fp32"
-    output_dir = f"./{base_output_name}_int8_ptq_onnx"
+    output_dir = f"results/{base_output_name}_int8_ptq_onnx"
     
     print(f"Starting PTQ quantization for: {model_path}")
     print(f"Output located in: {output_dir}")

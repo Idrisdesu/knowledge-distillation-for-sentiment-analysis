@@ -10,7 +10,7 @@ from transformers import (
 )
 from torch.optim import AdamW
 from tqdm import tqdm
-from data_utils import (
+from src.utils.data_utils import (
     load_and_prepare_dataset_imdb, 
     load_and_prepare_dataset_tweeteval
 )
@@ -190,7 +190,7 @@ def main():
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     use_amp = not args.no_amp and torch.cuda.is_available()
-    save_path = f"./distilled_{args.model}_{args.dataset}_best"
+    save_path = f"results/distilled_{args.model}_{args.dataset}_best"
 
     print("\n" + "="*80)
     print("BEGIN DISTILLATION TRAINING")

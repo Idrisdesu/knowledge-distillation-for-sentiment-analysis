@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_scheduler, DataCollatorWithPadding
 from tqdm import tqdm
-from metrics import compute_metrics
-from data_utils import load_and_prepare_dataset_imdb, load_and_prepare_dataset_tweeteval
+from src.utils.metrics import compute_metrics
+from src.utils.data_utils import load_and_prepare_dataset_imdb
 
 # Hugging Face token
 hf_token = os.getenv("HF_TOKEN")
@@ -80,7 +80,7 @@ for epoch in range(1,num_epoch+1):
     model.train()
 
 # Save the model
-model_dir = 'fine_tuned_roberta_large'
+model_dir = 'results/fine_tuned_roberta_large'
 model_to_save = model.module if hasattr(model, 'module') else model
 model_to_save.save_pretrained(model_dir)
 tokenizer.save_pretrained(model_dir)

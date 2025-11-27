@@ -114,27 +114,71 @@ We discovered that **Teacher Accuracy ≠ Teaching Quality**.
 
 ---
 
-🚀 Installation
+# Real-Time Sentiment Analysis via Knowledge Distillation
 
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)](https://pytorch.org/)
+[![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)](https://huggingface.co/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+**Optimizing Large Language Models (LLMs) for real-time inference using Knowledge Distillation and Quantization.**
+
+> **Key Achievement:** Compressed a RoBERTa-Large model into a MiniLM student, achieving **10× faster inference** while retaining **>91% of the original accuracy**, enabling real-time deployment on standard hardware.
+
+---
+
+# 🧠 Distilled Models – IMDB Sentiment Classification
+
+Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset**.
+Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
+
+| Model                    | Parameters | Test Accuracy | Hugging Face Repository                                                                                                            |
+| ------------------------ | ---------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **DistilRoBERTa (IMDB)** | ~82M       | **92.80%**    | [https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb)     |
+| **DistilBERT (IMDB)**    | ~66M       | **91.64%**    | [https://huggingface.co/youssefennouri/distilled_distilbert_imdb](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) |
+| **MiniLM (IMDB)**        | ~33M       | **91.98%**    | [https://huggingface.co/youssefennouri/distilled_minilm_imdb](https://huggingface.co/youssefennouri/distilled_minilm_imdb)         |
+| **TinyBERT (IMDB)**      | ~14M       | **88.24%**    | [https://huggingface.co/youssefennouri/distilled_tinybert_imdb](https://huggingface.co/youssefennouri/distilled_tinybert_imdb)     |
+
+### 🚀 Usage Example
+
+```python...
+```
+
+---
+
+# 📖 Overview
+
+...
+
+---
+
+# 🚀 Installation
+
+```bash
 git clone https://github.com/votre-username/realtime-sentiment-distillation.git
 cd realtime-sentiment-distillation
 pip install -r requirements.txt
+```
 
-📥 Download Pre-trained Models
+## 📥 Download Pre-trained Models
 
 To reproduce our benchmarks immediately without training from scratch, you need to download the distilled and quantized models.
 
-Option A: Automated Download (Recommended)
-We provide a script to fetch all necessary models from Hugging Face and place them in the correct results/ structure.
+**Option A: Automated Download (Recommended)**
+We provide a script to fetch all necessary models from Hugging Face and place them in the correct `results/` structure.
 
+```bash
 python -m src.utils.download_models
+```
 
-(Note: If this script doesn't exist, please refer to Option B)
+*(Note: If this script doesn't exist, please refer to Option B)*
 
-Option B: Manual DownloadIf you want to run the benchmarks, ensure your results/ folder looks like this. You can download the weights from the links in the "Distilled Models" section above or train them yourself using Step 2 and Step 3 in Usage.
+**Option B: Manual Download**
+If you want to run the benchmarks, ensure your `results/` folder looks like this. You can download the weights from the links in the "Distilled Models" section above or train them yourself using Step 2 and Step 3 in Usage.
 
 Required structure for Benchmarking:
 
+```
 results/
 ├── distilled_model_imdb/
 │   ├── distilled_distilbert_imdb/
@@ -143,8 +187,13 @@ results/
 └── distilled_models_imdb_int8/  <-- (Generated via src.inference.quantize_model)
     ├── distilled_distilbert_imdb_int8_ptq_onnx/
     └── ...
+```
 
-⚠️ Important: The ONNX quantized models (_int8_ptq_onnx) are hardware-specific. We strongly recommend generating them on your own machine:
+⚠️ **Important:** The ONNX quantized models (`_int8_ptq_onnx`) are hardware-specific. We strongly recommend generating them on your own machine:
+
+```bash
+python -m src.inference.quantize_model
+```
 ---
 
 # 🛠 Usage (How to Run)

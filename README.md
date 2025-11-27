@@ -10,6 +10,25 @@
 > **Key Achievement:** Compressed a RoBERTa-Large model into a MiniLM student, achieving **10× faster inference** while retaining **>91% of the original accuracy**, enabling real-time deployment on standard hardware.
 
 ---
+# 📖 Overview
+
+Large Language Models like RoBERTa deliver great accuracy but are too slow and heavy for **real-time applications** such as:
+- live content moderation,
+- on-device inference,
+- real-time chatbot filtering.
+
+This project implements a complete **Model Compression Pipeline**:
+
+1. **Teacher Fine-Tuning** – optimizing RoBERTa-Large on IMDb/TweetEval.  
+2. **Knowledge Distillation** – transferring the teacher’s knowledge to compact models (MiniLM, DistilBERT…).  
+3. **Hyperparameter Optimization** – searching for the best temperature and α with Optuna.  
+4. **Quantization** – converting models to ONNX and applying INT8 dynamic quantization for speed.
+
+### 🧪 Datasets Used
+- **IMDb** – binary sentiment classification (Positive/Negative)  
+- **TweetEval** – 3-way sentiment (Positive / Negative / Neutral)
+
+---
 
 # 🧠 Distilled Models – IMDB Sentiment Classification
 
@@ -40,26 +59,6 @@ outputs = model(**inputs)
 prediction = outputs.logits.argmax().item()
 print("Positive" if prediction == 1 else "Negative")
 ```
-
----
-
-# 📖 Overview
-
-Large Language Models like RoBERTa deliver great accuracy but are too slow and heavy for **real-time applications** such as:
-- live content moderation,
-- on-device inference,
-- real-time chatbot filtering.
-
-This project implements a complete **Model Compression Pipeline**:
-
-1. **Teacher Fine-Tuning** – optimizing RoBERTa-Large on IMDb/TweetEval.  
-2. **Knowledge Distillation** – transferring the teacher’s knowledge to compact models (MiniLM, DistilBERT…).  
-3. **Hyperparameter Optimization** – searching for the best temperature and α with Optuna.  
-4. **Quantization** – converting models to ONNX and applying INT8 dynamic quantization for speed.
-
-### 🧪 Datasets Used
-- **IMDb** – binary sentiment classification (Positive/Negative)  
-- **TweetEval** – 3-way sentiment (Positive / Negative / Neutral)
 
 ---
 

@@ -1,115 +1,196 @@
-# Optimization of LLMs for Real-Time Sentiment Analysis
+# Real-Time Sentiment Analysis via Knowledge Distillation
 
-This project explores the compression of large language models (LLMs) for real-time sentiment analysis tasks. The primary goal is to distill the knowledge from a large, fine-tuned `roberta-large` model (the "Teacher") into smaller, faster "student" models (like DistilBERT, MiniLM, and TinyBERT) and to further optimize them using post-training quantization (PTQ).
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)](https://pytorch.org/)
+[![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)](https://huggingface.co/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-The experiments are conducted on two distinct datasets:
-- **IMDb**: A large dataset for binary sentiment classification (positive/negative).
-- **TweetEval (Sentiment)**: A more complex, multi-class dataset (positive/negative/neutral) with shorter texts, requiring more nuanced understanding.
+**Optimizing Large Language Models (LLMs) for real-time inference using Knowledge Distillation and Quantization.**
 
-## Key Results & Insights
+> **Key Achievement:** Compressed a RoBERTa-Large model into a MiniLM student, achieving **10× faster inference** while retaining **>91% of the original accuracy**, enabling real-time deployment on standard hardware.
 
-The distillation process was highly effective, producing lightweight models that retain a significant portion of the teacher's performance while being substantially faster.
+---
 
-| Model | Accuracy (IMDb) | Accuracy (TweetEval) | Speedup (vs. Teacher) |
-|---|---|---|---|
-| **Teacher (roberta-large)** | ~95% | ~89% | 1x |
-| **DistilBERT** | >92% | >85% | ~8x |
-| **MiniLM** | >91% | >84% | ~6x |
-| **TinyBERT** | >90% | >82% | **~12x** |
-| **TinyBERT (INT8 Quantized)** | >90% | >82% | **~15x** |
+# 🧠 Distilled Models – IMDB Sentiment Classification
 
-*Note: These are representative results. Actual numbers can be found in the `results/` directory.*
+Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset**.  
+Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
 
-### The Importance of Teacher Calibration
+| Model | Parameters | Test Accuracy | Hugging Face Repository |
+|--------|-------------|----------------|--------------------------|
+| **DistilRoBERTa (IMDB)** | ~82M | **92.80%** | 🔗 https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb |
+| **DistilBERT (IMDB)** | ~66M | **91.64%** | 🔗 https://huggingface.co/youssefennouri/distilled_distilbert_imdb |
+| **MiniLM (IMDB)** | ~33M | **91.98%** | 🔗 https://huggingface.co/youssefennouri/distilled_minilm_imdb |
+| **TinyBERT (IMDB)** | ~14M | **88.24%** | 🔗 https://huggingface.co/youssefennouri/distilled_tinybert_imdb |
 
-A key insight from this project is that the *quality* of the teacher's predictions is more important than its raw accuracy.
+### 🚀 Usage Example
 
-- On the **IMDb dataset**, the RoBERTa-large teacher achieved very high accuracy (~95%), leading to "arrogant" or over-confident predictions (e.g., probabilities of 0.999 for one class).
-- On the more complex **TweetEval dataset**, the teacher was less certain, producing more nuanced or "calibrated" predictions (e.g., probabilities of 0.70 for one class, 0.25 for another).
+```python
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-This "calibrated" teacher from TweetEval, despite having lower overall accuracy, produced **better-performing student models** through distillation. The softer probability distributions provided a richer training signal for the students to learn from, highlighting the importance of teacher calibration in knowledge distillation.
+model_name = "youssefennouri/distilled_minilm_imdb"
 
-## Project Structure
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-The project is organized as follows:
+text = "The movie was surprisingly good and emotional."
+inputs = tokenizer(text, return_tensors="pt")
+outputs = model(**inputs)
 
-```
-├── README.md
-├── requirements.txt
-├── results/                # Stores all outputs from experiments
-│   ├── benchmarks/         # CSV files from inference speed/memory benchmarks.
-│   ├── distilbert_stats/   # Logs, checkpoints, and metrics for DistilBERT.
-│   └── ...                 # (similar folders for other student models)
-└── src/
-    ├── training/           # Scripts for training and distillation.
-    │   ├── fine_tuning_teacher_imdb.py
-    │   └── distillation.py
-    ├── inference/          # Scripts for benchmarking and quantization.
-    │   ├── inference.py
-    │   └── quantize_model.py
-    └── utils/              # Utility functions for data, metrics, etc.
+prediction = outputs.logits.argmax().item()
+print("Positive" if prediction == 1 else "Negative")
 ```
 
-## How to Use
+---
 
-### 1. Installation
+# 📖 Overview
 
-First, clone the repository and install the required dependencies.
+Large Language Models like RoBERTa deliver great accuracy but are too slow and heavy for **real-time applications** such as:
+- live content moderation,
+- on-device inference,
+- real-time chatbot filtering.
+
+This project implements a complete **Model Compression Pipeline**:
+
+1. **Teacher Fine-Tuning** – optimizing RoBERTa-Large on IMDb/TweetEval.  
+2. **Knowledge Distillation** – transferring the teacher’s knowledge to compact models (MiniLM, DistilBERT…).  
+3. **Hyperparameter Optimization** – searching for the best temperature and α with Optuna.  
+4. **Quantization** – converting models to ONNX and applying INT8 dynamic quantization for speed.
+
+### 🧪 Datasets Used
+- **IMDb** – binary sentiment classification (Positive/Negative)  
+- **TweetEval** – 3-way sentiment (Positive / Negative / Neutral)
+
+---
+
+# 📊 Key Results & Insights
+
+## 1. Performance vs. Speed Trade-off
+
+| Model | Accuracy (IMDb) | Speedup | Size |
+|-------|:--------------:|:-------:|:----:|
+| **RoBERTa-Large (Teacher)** | **95.88%** | 1× | ~1.4GB |
+| DistilBERT | 92.5% | ~2× | ~260MB |
+| **MiniLM (Best Trade-off)** | **91.2%** | **~10×** | **~120MB** |
+| TinyBERT | 88.4% | ~20× | ~60MB |
+
+*(See `results/benchmarks/` for raw logs.)*
+
+## 2. The “Calibration” Discovery
+
+We discovered that **Teacher Accuracy ≠ Teaching Quality**.
+
+- **IMDb** → Teacher gave *overconfident* outputs → students inherit the overfitting.  
+- **TweetEval** → Teacher produced *nuanced probabilities* → better generalization for students like DistilBERT.
+
+> **Takeaway:** A well-calibrated teacher produces much stronger students than a high-accuracy but overconfident teacher.
+
+---
+
+# 📂 Project Structure
+
+```text
+.
+├── src/
+│   ├── training/       # Teacher fine-tuning & Knowledge Distillation
+│   │   ├── fine_tuning_teacher_imdb.py
+│   │   ├── fine_tuning_teacher_tweeteval.py
+│   │   ├── distillation.py
+│   │   └── ...
+│   ├── inference/      # ONNX conversion, quantization, benchmarking
+│   │   ├── inference.py
+│   │   ├── inference_onnx.py
+│   │   ├── quantize_model.py
+│   │   └── ...
+│   └── utils/
+│       ├── teacher_confidence.py
+│       └── ...
+├── results/
+│   ├── benchmarks/
+│   ├── distilbert_stats/
+│   ├── minilm_stats/
+│   └── ...
+└── requirements.txt
+```
+
+---
+
+# 🚀 Installation
 
 ```bash
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/votre-username/realtime-sentiment-distillation.git
+cd realtime-sentiment-distillation
 pip install -r requirements.txt
 ```
 
-### 2. Running the Pipeline
+---
 
-The project follows a standard distillation pipeline:
+# 🛠 Usage (How to Run)
 
-**Step 1: Fine-Tune the Teacher Model**
-(This step is usually done once per dataset.)
+⚠️ **IMPORTANT:** Always run using `python -m` **from the project root**, otherwise you will get `ModuleNotFoundError`.
 
-```bash
-# For IMDb
-python src/training/fine_tuning_teacher_imdb.py
+---
 
-# For TweetEval
-python src/training/fine_tuning_teacher_tweeteval.py
-```
-
-**Step 2: Distill Knowledge into a Student Model**
-Run distillation for a specific student model or for all of them.
+## 1. Train the Teacher
 
 ```bash
-# Distill TinyBERT on the IMDb dataset
-python src/training/distillation.py --model tinybert --dataset imdb --teacher_path results/fine_tuned_roberta_large_imdb
+# IMDb:
+python -m src.training.fine_tuning_teacher_imdb
 
-# Distill all students on the TweetEval dataset
-python src/training/distillation.py --model all --dataset tweeteval --teacher_path results/fine_tuned_roberta_large_tweeteval_sentiment
+# Or TweetEval:
+# python -m src.training.fine_tuning_teacher_tweeteval
 ```
 
-**Step 3: Benchmark the Distilled Models**
-Measure the inference speed and memory usage of the resulting models.
+## 2. Knowledge Distillation (Train Students)
 
 ```bash
-# Benchmark IMDb models
-python src/inference/inference.py
-
-# Benchmark TweetEval models
-python src/inference/inference_tweeteval.py
+python -m src.training.distillation --model distilbert --dataset imdb
 ```
 
-**Step 4 (Optional): Post-Training Quantization (PTQ)**
-Further optimize a distilled model by converting it to ONNX and quantizing it to INT8.
+(See `distillation.py` for model choices.)
+
+## 3. Quantization & Benchmarking
 
 ```bash
-# Quantize the distilled TinyBERT model for IMDb
-python src/inference/quantize_model.py --model_path results/distilled_tinybert_imdb_best
+# Standard inference benchmark
+python -m src.inference.inference
+
+# Quantize to ONNX INT8
+python -m src.inference.quantize_model
+
+# Benchmark ONNX model
+python -m src.inference.inference_onnx
 ```
 
-**Step 5 (Optional): Benchmark Quantized Models**
-Measure the performance of the ONNX INT8 models.
+---
 
-```bash
-python src/inference/inference_onnx.py
-```
+# 📈 Methodology Details
+
+### 1. Teacher Fine-Tuning  
+The teacher sets the performance **upper bound**.
+
+### 2. Hyperparameter Search (Optuna)
+We optimized:
+- **α** – balance between hard and soft labels  
+- **temperature** – softmax smoothing  
+
+Logs:  
+`results/distilbert_stats/hypersearch_*.csv`
+
+### 3. Teacher Calibration Analysis  
+Using `teacher_confidence.py`, we evaluated:
+- maximum softmax probability (MSP),
+- entropy of predictions,
+- calibration curves.
+
+This explained why some students learned surprisingly better on TweetEval.
+
+---
+
+# 👥 Authors
+
+- **Idris NECHNECH**  
+- **Youssef ENNOURI**  
+- **Younes OUDINA**  
+
+*Project completed as part of the NLP Course (2025).*

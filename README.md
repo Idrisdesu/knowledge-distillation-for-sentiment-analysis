@@ -114,14 +114,37 @@ We discovered that **Teacher Accuracy ≠ Teaching Quality**.
 
 ---
 
-# 🚀 Installation
+🚀 Installation
 
-```bash
 git clone https://github.com/votre-username/realtime-sentiment-distillation.git
 cd realtime-sentiment-distillation
 pip install -r requirements.txt
-```
 
+📥 Download Pre-trained Models
+
+To reproduce our benchmarks immediately without training from scratch, you need to download the distilled and quantized models.
+
+Option A: Automated Download (Recommended)
+We provide a script to fetch all necessary models from Hugging Face and place them in the correct results/ structure.
+
+python -m src.utils.download_models
+
+(Note: If this script doesn't exist, please refer to Option B)
+
+Option B: Manual DownloadIf you want to run the benchmarks, ensure your results/ folder looks like this. You can download the weights from the links in the "Distilled Models" section above or train them yourself using Step 2 and Step 3 in Usage.
+
+Required structure for Benchmarking:
+
+results/
+├── distilled_model_imdb/
+│   ├── distilled_distilbert_imdb/
+│   ├── distilled_minilm_imdb/
+│   └── ...
+└── distilled_models_imdb_int8/  <-- (Generated via src.inference.quantize_model)
+    ├── distilled_distilbert_imdb_int8_ptq_onnx/
+    └── ...
+
+⚠️ Important: The ONNX quantized models (_int8_ptq_onnx) are hardware-specific. We strongly recommend generating them on your own machine:
 ---
 
 # 🛠 Usage (How to Run)

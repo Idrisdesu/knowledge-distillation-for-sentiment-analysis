@@ -64,7 +64,7 @@ print("Positive" if prediction == 1 else "Negative")
 
 # 📊 Key Results & Insights
 
-## 1. (a) 🎬 IMDb — Performance & Compression Trade-off
+## 1. (a) 🎬 IMDb — Performance Vs. Speed Trade-off
 
 | Model | Accuracy (IMDb) | Speedup | Number of Parameters |
 |-------|:--------------:|:-------:|:----:|
@@ -76,7 +76,7 @@ print("Positive" if prediction == 1 else "Negative")
 
 > *(See `results/benchmarks/` for raw logs. GPU usage is also reported: distilled models require ~2× less GPU memory compared to the teacher.)*
 
-## 1. (b) 🐦 TweetEval — Efficiency & Energy Consumption
+## 1. (b) 🐦 TweetEval — Performance Vs. Speed Trade-off
 
 | Model | Accuracy (TweetEval) | Speedup | GPU Power Usage (W) |
 |--------|:---------------------:|:--------:|:--------------------:|

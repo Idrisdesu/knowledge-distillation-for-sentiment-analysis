@@ -32,7 +32,7 @@ This project implements a complete **Model Compression Pipeline**:
 
 # 🧠 Distilled Models
 
-Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset** ans for **3-class sentiment analysis** on the **TweetEval dataset**  
+Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset** and for **3-class sentiment analysis** on the **TweetEval dataset**  
 Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
 
 | Model | Parameters | IMDB Accuracy | TweetEval Accuracy | Hugging Face Repositories |
@@ -64,7 +64,7 @@ print("Positive" if prediction == 1 else "Negative")
 
 # 📊 Key Results & Insights
 
-## 1. Performance vs. Speed Trade-off
+## 1. (a) 🎬 IMDb — Performance & Compression Trade-off
 
 | Model | Accuracy (IMDb) | Speedup | Number of Parameters |
 |-------|:--------------:|:-------:|:----:|
@@ -74,7 +74,19 @@ print("Positive" if prediction == 1 else "Negative")
 | MiniLM | 91.98% | ~2× | 33M |
 | TinyBERT | 88.24% | ~5× | 14.5M |
 
-*(See `results/benchmarks/` for raw logs.), it also includes GPU usage which is quite close for every student here: 2x lower than their teacher. *
+> *(See `results/benchmarks/` for raw logs. GPU usage is also reported: distilled models require ~2× less GPU memory compared to the teacher.)*
+
+## 1. (b) 🐦 TweetEval — Efficiency & Energy Consumption
+
+| Model | Accuracy (TweetEval) | Speedup | GPU Power Usage (W) |
+|--------|:---------------------:|:--------:|:--------------------:|
+| **RoBERTa-Large (Teacher)** | **75.55%** | 1× | **208 W** |
+| DistilRoBERTa | 74.40% | ~4× | 110 W |
+| **DistilBERT (Best trade-off)** | **75.65%** | **~4×** | **101 W** |
+| MiniLM | 75.60% | ~2× | 88 W |
+| TinyBERT | 73.35% | ~5× | 83 W |
+
+> *(Energy efficiency is computed as power draw during inference with fixed batch size. Student models reduce power consumption by up to **2.5×** while preserving accuracy.)*
 
 ## 2. The “Calibration” Discovery
 

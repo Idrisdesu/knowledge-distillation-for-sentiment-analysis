@@ -7,26 +7,26 @@
 
 **Optimizing Large Language Models (LLMs) for real-time inference using Knowledge Distillation and Quantization.**
 
-> **Key Achievement:** Compressed a RoBERTa-Large model into a MiniLM student, achieving **10× faster inference** while retaining **>91% of the original accuracy**, enabling real-time deployment on standard hardware.
+> **Key Achievement:** Compressed a RoBERTa-Large model into a distilRoBERTa student, achieving **5× faster inference** while retaining **>97% of the original accuracy**, enabling real-time deployment on standard hardware.
 
 ---
 # 📖 Overview
 
-Large Language Models like RoBERTa deliver great accuracy but are too slow and heavy for **real-time applications** such as:
+Large Language Models like RoBERTa (355M parameters) deliver great accuracy but are too slow and heavy for **real-time applications** such as:
 - live content moderation,
 - on-device inference,
 - real-time chatbot filtering.
 
 This project implements a complete **Model Compression Pipeline**:
 
-1. **Teacher Fine-Tuning** – optimizing RoBERTa-Large on IMDb/TweetEval.  
-2. **Knowledge Distillation** – transferring the teacher’s knowledge to compact models (MiniLM, DistilBERT…).  
+1. **Teacher Fine-Tuning** – optimizing RoBERTa-Large on IMDb and TweetEval (sentiment task).  
+2. **Knowledge Distillation** – transferring the teacher’s knowledge to compact models (DistilRoBERTa, DistilBERT,…).  
 3. **Hyperparameter Optimization** – searching for the best temperature and α with Optuna.  
 4. **Quantization** – converting models to ONNX and applying INT8 dynamic quantization for speed.
 
 ### 🧪 Datasets Used
 - **IMDb** – binary sentiment classification (Positive/Negative)  
-- **TweetEval** – 3-way sentiment (Positive / Negative / Neutral)
+- **TweetEval** – 3-class sentiment classification (Positive / Negative / Neutral)
 
 ---
 
@@ -47,7 +47,7 @@ Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
 ```python
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-model_name = "youssefennouri/distilled_minilm_imdb"
+model_name = "Idrisdesu/distilled_distilroberta_imdb"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -66,14 +66,15 @@ print("Positive" if prediction == 1 else "Negative")
 
 ## 1. Performance vs. Speed Trade-off
 
-| Model | Accuracy (IMDb) | Speedup | Size |
+| Model | Accuracy (IMDb) | Speedup | Number of Parameters |
 |-------|:--------------:|:-------:|:----:|
-| **RoBERTa-Large (Teacher)** | **95.88%** | 1× | ~1.4GB |
-| DistilBERT | 92.5% | ~2× | ~260MB |
-| **MiniLM (Best Trade-off)** | **91.2%** | **~10×** | **~120MB** |
-| TinyBERT | 88.4% | ~20× | ~60MB |
+| **RoBERTa-Large (Teacher)** | **95.88%** | 1× | 355M |
+| **DistilRoBERTa (Best trade-off)** | **92.80%** | **~4×** | **82M** |
+| DistilBERT | 91.64% | ~4× | 66M |
+| MiniLM | 91.98% | ~2× | 33M |
+| TinyBERT | 88.24% | ~5× | 14.5M |
 
-*(See `results/benchmarks/` for raw logs.)*
+*(See `results/benchmarks/` for raw logs.), it also includes GPU usage which is quite close for every student here: 2x lower than their teacher. *
 
 ## 2. The “Calibration” Discovery
 

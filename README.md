@@ -30,17 +30,17 @@ This project implements a complete **Model Compression Pipeline**:
 
 ---
 
-# 🧠 Distilled Models – IMDB Sentiment Classification
+# 🧠 Distilled Models
 
-Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset**.  
+Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset** ans for **3-class sentiment analysis** on the **TweetEval dataset**  
 Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
 
-| Model | Parameters | Test Accuracy | Hugging Face Repository |
-|--------|-------------|----------------|--------------------------|
-| **DistilRoBERTa (IMDB)** | ~82M | **92.80%** | 🔗 https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb |
-| **DistilBERT (IMDB)** | ~66M | **91.64%** | 🔗 https://huggingface.co/youssefennouri/distilled_distilbert_imdb |
-| **MiniLM (IMDB)** | ~33M | **91.98%** | 🔗 https://huggingface.co/youssefennouri/distilled_minilm_imdb |
-| **TinyBERT (IMDB)** | ~14M | **88.24%** | 🔗 https://huggingface.co/youssefennouri/distilled_tinybert_imdb |
+| Model | Parameters | IMDB Accuracy | TweetEval Accuracy | Hugging Face Repositories |
+|--------|-------------|----------------|------------------------|------------------------------|
+| **DistilRoBERTa** | ~82M | **92.80%** | **74.40%** | 🔗 [IMDB](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb) / 🔗 [TweetEval](https://huggingface.co/Idrisdesu/distilled_distilroberta_tweeteval) |
+| **DistilBERT** | ~66M | **91.64%** | **75.65%** | 🔗 [IMDB](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) / 🔗 [TweetEval](https://huggingface.co/Idrisdesu/distilled_distilbert_tweeteval) |
+| **MiniLM** | ~33M | **91.98%** | **75.60%** | 🔗 [IMDB](https://huggingface.co/youssefennouri/distilled_minilm_imdb) / 🔗 [TweetEval](https://huggingface.co/Idrisdesu/distilled_minilm_tweeteval) |
+| **TinyBERT** | ~14M | **88.24%** | **73.35%** | 🔗 [IMDB](https://huggingface.co/youssefennouri/distilled_tinybert_imdb) / 🔗 [TweetEval](https://huggingface.co/Idrisdesu/distilled_tinybert_tweeteval) |
 
 ### 🚀 Usage Example
 

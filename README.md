@@ -7,7 +7,7 @@
 
 **Optimizing Large Language Models (LLMs) for real-time inference using Knowledge Distillation and Quantization.**
 
-> **Key Achievement:** Compressed a RoBERTa-Large model into a distilRoBERTa student, achieving **5× faster inference** while retaining **>97% of the original accuracy**, enabling real-time deployment on standard hardware.
+> **Key Achievement:** Compressed a RoBERTa-Large model into a distilRoBERTa student, achieving **5× faster inference** while retaining **>97% of the original accuracy** (on the IMDb dataset), enabling real-time deployment on standard hardware.
 
 ---
 # 📖 Overview

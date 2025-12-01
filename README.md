@@ -127,45 +127,7 @@ We discovered that **Teacher Accuracy ≠ Teaching Quality**.
 
 ---
 
-# Real-Time Sentiment Analysis via Knowledge Distillation
-
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)](https://pytorch.org/)
-[![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)](https://huggingface.co/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-
-**Optimizing Large Language Models (LLMs) for real-time inference using Knowledge Distillation and Quantization.**
-
-> **Key Achievement:** Compressed a RoBERTa-Large model into a MiniLM student, achieving **10× faster inference** while retaining **>91% of the original accuracy**, enabling real-time deployment on standard hardware.
-
----
-
-# 🧠 Distilled Models – IMDB Sentiment Classification
-
-Below are the distilled models trained for **binary sentiment analysis** on the **IMDb dataset**.
-Each model was distilled from a larger high-performance teacher (RoBERTa-Large).
-
-| Model                    | Parameters | Test Accuracy | Hugging Face Repository                                                                                                            |
-| ------------------------ | ---------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **DistilRoBERTa (IMDB)** | ~82M       | **92.80%**    | [https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb](https://huggingface.co/Idrisdesu/distilled_distilroberta_imdb)     |
-| **DistilBERT (IMDB)**    | ~66M       | **91.64%**    | [https://huggingface.co/youssefennouri/distilled_distilbert_imdb](https://huggingface.co/youssefennouri/distilled_distilbert_imdb) |
-| **MiniLM (IMDB)**        | ~33M       | **91.98%**    | [https://huggingface.co/youssefennouri/distilled_minilm_imdb](https://huggingface.co/youssefennouri/distilled_minilm_imdb)         |
-| **TinyBERT (IMDB)**      | ~14M       | **88.24%**    | [https://huggingface.co/youssefennouri/distilled_tinybert_imdb](https://huggingface.co/youssefennouri/distilled_tinybert_imdb)     |
-
-### 🚀 Usage Example
-
-```python...
-```
-
----
-
-# 📖 Overview
-
-...
-
----
-
-# 🚀 Installation
+# 🚀 How to Download & Install the Project
 
 ```bash
 git clone https://github.com/votre-username/realtime-sentiment-distillation.git

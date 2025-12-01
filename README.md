@@ -130,8 +130,8 @@ We discovered that **Teacher Accuracy ≠ Teaching Quality**.
 # 🚀 How to Download & Install the Project
 
 ```bash
-git clone https://github.com/votre-username/realtime-sentiment-distillation.git
-cd realtime-sentiment-distillation
+[https://github.com/Idrisdesu/knowledge-distillation-for-sentiment-analysis.git](https://github.com/Idrisdesu/knowledge-distillation-for-sentiment-analysis.git)
+cd knowledge-distillation-for-sentiment-analysis
 pip install -r requirements.txt
 ```
 
@@ -139,16 +139,7 @@ pip install -r requirements.txt
 
 To reproduce our benchmarks immediately without training from scratch, you need to download the distilled and quantized models.
 
-**Option A: Automated Download (Recommended)**
-We provide a script to fetch all necessary models from Hugging Face and place them in the correct `results/` structure.
-
-```bash
-python -m src.utils.download_models
-```
-
-*(Note: If this script doesn't exist, please refer to Option B)*
-
-**Option B: Manual Download**
+**Manual Download**
 If you want to run the benchmarks, ensure your `results/` folder looks like this. You can download the weights from the links in the "Distilled Models" section above or train them yourself using Step 2 and Step 3 in Usage.
 
 Required structure for Benchmarking:
